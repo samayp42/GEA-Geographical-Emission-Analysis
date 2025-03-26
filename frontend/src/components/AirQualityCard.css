@@ -1,0 +1,122 @@
+.air-quality-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin: 15px auto;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 450px;
+}
+
+.location-info {
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.location-info h2 {
+  font-size: 22px;
+  margin: 0;
+  color: #2c3e50;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.timestamp {
+  font-size: 4px;
+  color: #666;
+  margin: 4px 0;
+  font-weight: 500;
+}
+
+.aqi-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.aqi-number {
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.aqi-text {
+  font-size: 18px;
+  font-weight: 600;
+  padding-left: 12px;
+  border-left: 2px solid currentColor;
+  opacity: 0.9;
+}
+
+.aqi-main {
+  margin: 12px 0;
+  text-align: center;
+}
+
+.aqi-value {
+  margin: 10px 0;
+}
+
+.aqi-value h3 {
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 14px;
+  color: #34495e;
+  margin: 0;
+}
+
+.aqi-number {
+  font-size: 42px;
+  font-weight: 700;
+  color: #FF4B2B;
+  margin: 5px 0;
+}
+
+.aqi-text {
+  font-size: 16px;
+  color: #0e0706;
+  font-weight: 500;
+}
+
+.pollutants-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.pollutant-item {
+  background: #f8f9fa;
+  padding-right: 5px;
+  border-radius: 8px;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pollutant-name {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.pollutant-value {
+  color: #206474;
+  font-weight: 600;
+  background: rgba(41, 128, 185, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Color coding for different pollutants */
+.pollutant-item[data-pollutant="CO"] .pollutant-value { color: #e74c3c; background: rgba(231, 76, 60, 0.1); }
+.pollutant-item[data-pollutant="NO"] .pollutant-value { color: #f39c12; background: rgba(243, 156, 18, 0.1); }
+.pollutant-item[data-pollutant="NO2"] .pollutant-value { color: #d35400; background: rgba(211, 84, 0, 0.1); }
+.pollutant-item[data-pollutant="O3"] .pollutant-value { color: #27ae60; background: rgba(39, 174, 96, 0.1); }
+.pollutant-item[data-pollutant="SO2"] .pollutant-value { color: #8e44ad; background: rgba(142, 68, 173, 0.1); }
+.pollutant-item[data-pollutant="PM2_5"] .pollutant-value { color: #c0392b; background: rgba(192, 57, 43, 0.1); }
+.pollutant-item[data-pollutant="PM10"] .pollutant-value { color: #d35400; background: rgba(211, 84, 0, 0.1); }
+.pollutant-item[data-pollutant="NH3"] .pollutant-value { color: #16a085; background: rgba(22, 160, 133, 0.1); }

@@ -1,0 +1,2 @@
+Now i want to do the following:
+1. enhance the output like we are showing the textual and pie chart analysis, but i want to also use the map like show the pois on the map as a colour coded dots along with area as a polygon.
