@@ -112,7 +112,6 @@ function App() {
               </button>
             </div>
             
-            <WeatherCard weatherData={analysis.weather} />
             
             <div className="analysis-panel-content">
               <AirQualityCard 

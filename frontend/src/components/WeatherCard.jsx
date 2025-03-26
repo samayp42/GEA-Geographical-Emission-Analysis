@@ -21,6 +21,14 @@ const WeatherCard = ({ weatherData }) => {
     ).join(' ');
   };
 
+  const getTemperatureClass = (temp) => {
+    if (temp <= 0) return 'very-cold';
+    if (temp <= 10) return 'cold';
+    if (temp <= 20) return 'mild';
+    if (temp <= 30) return 'warm';
+    return 'hot';
+  };
+
   const tempClass = getTemperatureClass(weatherData.temp);
 
   return (
