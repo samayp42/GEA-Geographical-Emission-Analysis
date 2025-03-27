@@ -1,0 +1,300 @@
+.scrollable-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.scrollable-container * {
+  pointer-events: auto;
+}
+
+/* Enable map interaction when scrolled to bottom */
+.scrollable-container {
+  pointer-events: none;
+}
+
+.scrollable-container:hover,
+.scrollable-container:active {
+  pointer-events: none;
+}
+
+.map-container {
+  pointer-events: auto;
+}
+
+.card {
+  pointer-events: auto; /* Enable interaction with cards */
+  margin: 20px auto;
+  width: 95%;
+  max-width: 1200px;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* First card peek effect */
+.peek-card {
+  height: 80px;
+  margin-top: calc(100vh - 80px);
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.peek-card:hover {
+  margin-top: calc(100vh - 300px);
+  height: 300px;
+}
+
+.analysis-scroll {
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.analysis-scroll-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.analysis-text {
+  margin: 10px 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.peek-card::after {
+  content: '';
+  position: absolute;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 5px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+}
+
+/* Weather and Air Quality Card */
+.dual-card {
+  display: flex;
+  flex-direction: row;
+  min-height: 300px;
+}
+
+@media (max-width: 768px) {
+  .dual-card {
+    flex-direction: column;
+  }
+}
+
+.card-divider {
+  width: 1px;
+  background: rgba(0, 0, 0, 0.1);
+  margin: 20px 0;
+}
+
+.weather-section, .air-quality-section {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Visualization Card */
+.visualization-card {
+  min-height: 400px;
+  padding: 25px;
+}
+
+.visualization-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.visualization-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  align-items: center;
+}
+
+.chart-container {
+  height: 300px;
+  width: 100%;
+}
+
+.categories-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.category-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 15px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px;
+  font-size: 15px;
+  transition: transform 0.2s ease;
+}
+
+.category-item:hover {
+  transform: translateX(5px);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.category-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+/* Analysis Card */
+.analysis-card {
+  min-height: 400px;
+  padding: 25px;
+}
+
+.analysis-header {
+  margin-bottom: 20px;
+}
+
+.analysis-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.score-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.score {
+  font-size: 48px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.score-label {
+  font-size: 16px;
+  color: #666;
+  margin: 0;
+}
+
+.score-bar {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.score-segment {
+  flex: 1;
+  height: 100%;
+  margin: 0 1px;
+}
+
+.summary {
+  background: rgba(255, 255, 255, 0.5);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+/* Ensure map is visible and interactive */
+.map-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 1;
+}
+
+/* Search overlay */
+.search-overlay {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  width: 300px;
+  pointer-events: auto;
+}
+
+.search-input input {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.primary-button {
+  width: 100%;
+  padding: 10px;
+  background: linear-gradient(135deg, #0070f3, #00c49f);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.primary-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.primary-button:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.scroll-prompt {
+  text-align: center;
+  padding: 10px;
+  color: #403838;
+  font-size: 20px;
+  margin-top: 5px;
+}

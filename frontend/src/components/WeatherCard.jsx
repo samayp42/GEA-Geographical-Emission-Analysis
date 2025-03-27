@@ -53,15 +53,15 @@ const WeatherCard = ({ weatherData }) => {
         
         <div className="weather-stats">
           <div className="weather-stat">
-            <span className="stat-label">Feels Like</span>
+            <span className="stat-label">Feels Like: </span>
             <span className="stat-value">{Math.round(weatherData.feels_like)}°C</span>
           </div>
           <div className="weather-stat">
-            <span className="stat-label">Humidity</span>
+            <span className="stat-label">Humidity: </span>
             <span className="stat-value">{weatherData.humidity}%</span>
           </div>
           <div className="weather-stat">
-            <span className="stat-label">Wind</span>
+            <span className="stat-label">Wind: </span>
             <span className="stat-value">{weatherData.wind_speed} m/s</span>
           </div>
         </div>

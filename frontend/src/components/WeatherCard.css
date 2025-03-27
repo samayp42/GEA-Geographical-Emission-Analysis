@@ -2,15 +2,15 @@
 
 .weather-card-map {
   position: absolute;
-  top: 20px;
-  left: 20px;
+  top: 10px;
+  left: 430px;
   z-index: 1000;
   background: rgba(255, 255, 255, 0.35);
   backdrop-filter: blur(5px);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   padding: 12px 14px;  /* Reduced padding */
-  min-width: 200px;    /* Reduced width */
+  min-width: 100px;    /* Reduced width */
   overflow: hidden;
   transition: all 0.3s ease;
   border: 1px solid rgba(255, 255, 255, 0.3);

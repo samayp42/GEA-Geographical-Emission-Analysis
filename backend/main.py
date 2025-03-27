@@ -636,10 +636,52 @@ def get_weather_data(lat, lon):
         }
 
 # Modify the analyze_area function to include weather data
+# Add a reverse geocoding function to get location name from coordinates
+def reverse_geocode(lat, lon):
+    """Get location name from coordinates using Nominatim API"""
+    try:
+        url = f"https://nominatim.openstreetmap.org/reverse?lat={lat}&lon={lon}&format=json&zoom=10"
+        response = requests.get(url, headers={'User-Agent': 'EnviMap/1.0'})
+        response.raise_for_status()
+        data = response.json()
+        
+        # Extract address components
+        address = data.get('address', {})
+        city = address.get('city') or address.get('town') or address.get('village') or address.get('county') or ''
+        area = address.get('suburb') or address.get('neighbourhood') or address.get('district') or address.get('state') or ''
+        
+        # If we couldn't get a specific area, use the display name
+        if not area:
+            area = data.get('display_name', '').split(',')[0]
+        
+        return {
+            'city': city,
+            'area': area,
+            'display_name': data.get('display_name', '')
+        }
+    except Exception as e:
+        print(f"Reverse geocoding error: {str(e)}")
+        return {
+            'city': 'Unknown City',
+            'area': 'Unknown Area',
+            'display_name': 'Unknown Location'
+        }
+
 @app.post("/analyze-area")
 async def analyze_area(area_request: dict):
-    city_name = area_request.get('city')
-    area_name = area_request.get('area')
+    # Get coordinates from request
+    latitude = area_request.get('latitude')
+    longitude = area_request.get('longitude')
+    
+    # Use reverse geocoding to get location name
+    if latitude and longitude:
+        location_info = reverse_geocode(latitude, longitude)
+        city_name = location_info['city']
+        area_name = location_info['area']
+    else:
+        city_name = area_request.get('city')
+        area_name = area_request.get('area')
+    
     full_area_name = f"{area_name}, {city_name}"
 
     print(f"\n=== Starting Analysis for: {full_area_name} ===")
@@ -728,7 +770,7 @@ async def analyze_area(area_request: dict):
             # Find this section:
             air_quality_data = get_air_quality(geocode['lat'], geocode['lon'])
             
-            # Include air quality data in final_results
+            # Include air quality data and location info in final_results
             final_results = {
                 "summary": analysis_results.get("summary", ""),
                 "pie_chart_data": pie_chart_data,
@@ -737,7 +779,13 @@ async def analyze_area(area_request: dict):
                 "bbox": bbox,
                 "geojson": pois_geojson,
                 "pois": categorized_pois,
-                "air_quality": air_quality_data  # Add this line
+                "air_quality": {
+                    **air_quality_data,
+                    "location": {
+                        "city": geocode.get("city", "Unknown City"),
+                        "area": geocode.get("area", "Unknown Area")
+                    }
+                }
             }
             
             # And modify it to include weather data:

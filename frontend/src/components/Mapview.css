@@ -6,12 +6,143 @@
   bottom: 0;
   right: 0;
   left: 0;
+  cursor: crosshair; /* Change cursor to crosshair for better pin placement */
 }
 
 .map-container {
   position: relative;
   width: 100%;
   height: 100%;
+}
+
+/* Map controls container */
+.map-controls {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Search bar styling */
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  width: 300px;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 10px 15px;
+  border: none;
+  outline: none;
+  font-size: 14px;
+}
+
+.search-button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-button:hover {
+  background: #2980b9;
+}
+
+/* Analyze button styling */
+.analyze-button {
+  background: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 15px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: background 0.3s ease;
+}
+
+.analyze-button:hover {
+  background: #27ae60;
+}
+
+/* Pin marker styling */
+.pin-marker {
+  width: 30px;
+  height: 30px;
+  background-color: #e74c3c;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pin-marker i {
+  color: white;
+  font-size: 16px;
+  transform: rotate(45deg);
+  margin-top: -2px;
+}
+
+.pin-marker::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  background-color: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.pin-marker:hover {
+  transform: rotate(-45deg) scale(1.1);
+}
+
+/* Circle layer styling */
+.circle-layer {
+  pointer-events: none;
+  fill: rgba(52, 152, 219, 0.2);
+  stroke: #3498db;
+  stroke-width: 2;
+}
+
+.circle-stroke-layer {
+  pointer-events: none;
+  stroke: #3498db;
+  stroke-width: 2;
+  fill: none;
+}
+
+.display{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  border: 2px solid white;
+  animation: bounce 0.5s ease-out;
+}
+
+@keyframes bounce {
+  0% { transform: rotate(-45deg) translateY(-20px); opacity: 0; }
+  100% { transform: rotate(-45deg) translateY(0); opacity: 1; }
 }
 
 /* Style for map markers */
@@ -45,7 +176,7 @@
 .custom-popup .maplibregl-popup-content {
   padding: 16px;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   max-width: 320px;
   width: 100%;
 }

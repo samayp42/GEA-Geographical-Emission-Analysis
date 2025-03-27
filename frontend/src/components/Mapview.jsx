@@ -1,16 +1,22 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as maptilersdk from '@maptiler/sdk';
 import '@maptiler/sdk/dist/maptiler-sdk.css';
 import './Mapview.css';
 
 // Add WeatherCard import at the top
 import WeatherCard from './WeatherCard';
+import { FaSearch, FaMapMarkerAlt } from 'react-icons/fa';
 
-function Mapview({ results, pieChartData, colors, weatherData }) {  // Add weatherData to props
+function Mapview({ results, pieChartData, colors, weatherData, onCoordinatesSelected }) {  // Add weatherData and onCoordinatesSelected to props
   const mapContainer = useRef(null);
   const map = useRef(null);
   const mapLoaded = useRef(false);
   const markersRef = useRef([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [pinLocation, setPinLocation] = useState(null);
+  const [circleRadius, setCircleRadius] = useState(5); // 5km radius
+  const pinMarkerRef = useRef(null);
+  const circleLayerRef = useRef(null);
 
   useEffect(() => {
     // Define updateMap function first before using it
@@ -19,12 +25,35 @@ function Mapview({ results, pieChartData, colors, weatherData }) {  // Add weath
         console.log('Map not ready yet, cannot update');
         return;
       }
-    
-      console.log('Updating map with results:', results);
-    
+
+      // Remove click event listener when in analysis mode
+      if (!onCoordinatesSelected) {
+        map.current.off('click');
+      }
+
       // Clear any existing markers
       markersRef.current.forEach(marker => marker.remove());
       markersRef.current = [];
+
+      // Remove pin marker if it exists
+      if (pinMarkerRef.current) {
+        pinMarkerRef.current.remove();
+        pinMarkerRef.current = null;
+      }
+
+      // Remove circle layer and its stroke if they exist
+      if (circleLayerRef.current) {
+        if (map.current.getLayer('circle-layer')) {
+          map.current.removeLayer('circle-layer');
+        }
+        if (map.current.getLayer('circle-layer-stroke')) {
+          map.current.removeLayer('circle-layer-stroke');
+        }
+        if (map.current.getSource('circle-source')) {
+          map.current.removeSource('circle-source');
+        }
+        circleLayerRef.current = null;
+      }
     
       // Remove existing sources and layers
       try {
@@ -119,6 +148,9 @@ function Mapview({ results, pieChartData, colors, weatherData }) {  // Add weath
           // Add popups for POIs
           map.current.on('click', 'poi-points', (e) => {
             if (!e.features.length) return;
+            
+            // Prevent map from zooming when clicking POIs
+            e.preventDefault();
             
             // First, remove any existing popups to prevent duplicates
             const existingPopups = document.querySelectorAll('.maplibregl-popup');
@@ -422,6 +454,9 @@ function Mapview({ results, pieChartData, colors, weatherData }) {  // Add weath
         console.log('Map style loaded');
         mapLoaded.current = true;
         if (results) updateMap();
+        
+        // Add click event listener to the map
+        map.current.on('click', handleMapClick);
       });
     }
 
@@ -435,9 +470,199 @@ function Mapview({ results, pieChartData, colors, weatherData }) {  // Add weath
     }
   }, [results, pieChartData, colors]);
 
+  // Function to handle map click and place a pin
+  const handleMapClick = (e) => {
+    // Skip pin dropping if onCoordinatesSelected is null (analysis mode) or map is not ready
+    if (!map.current || onCoordinatesSelected === null) return;
+    
+    const { lng, lat } = e.lngLat;
+    console.log('Map clicked at:', lng, lat);
+    
+    // Remove existing pin if any
+    if (pinMarkerRef.current) {
+      pinMarkerRef.current.remove();
+      pinMarkerRef.current = null;
+    }
+    
+    // Remove existing circle layer if any
+    if (circleLayerRef.current) {
+      if (map.current.getLayer('circle-layer')) {
+        map.current.removeLayer('circle-layer');
+      }
+      if (map.current.getLayer('circle-layer-stroke')) {
+        map.current.removeLayer('circle-layer-stroke');
+      }
+      if (map.current.getSource('circle-source')) {
+        map.current.removeSource('circle-source');
+      }
+      circleLayerRef.current = null;
+    }
+    
+    // Create a new marker at the clicked location
+    const el = document.createElement('div');
+    el.className = 'pin-marker display';
+    el.innerHTML = '<svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 384 512" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M172.268 501.67C26.97 291.031 0 269.413 0 192 0 85.961 85.961 0 192 0s192 85.961 192 192c0 77.413-26.97 99.031-172.268 309.67-9.535 13.774-29.93 13.773-39.464 0zM192 272c44.183 0 80-35.817 80-80s-35.817-80-80-80-80 35.817-80 80 35.817 80 80 80z"></path></svg>';
+    const svg = el.querySelector('svg');
+    if (svg) {
+      svg.style.transform = 'rotate(45deg)';
+      svg.style.color = 'white';
+    }
+    
+    pinMarkerRef.current = new maptilersdk.Marker({
+      element: el,
+      anchor: 'bottom'
+    })
+      .setLngLat([lng, lat])
+      .addTo(map.current);
+    
+    // Create a circle around the pin with 5km radius
+    const center = [lng, lat];
+    const radiusInKm = circleRadius;
+    const options = { steps: 64, units: 'kilometers' };
+    
+    // Create a circle using turf.js
+    try {
+      // Check if turf is available
+      if (window.turf) {
+        const circle = window.turf.circle(center, radiusInKm, options);
+        
+        // Remove existing circle layers and source
+        if (map.current.getLayer('circle-layer')) {
+          map.current.removeLayer('circle-layer');
+        }
+        if (map.current.getLayer('circle-layer-stroke')) {
+          map.current.removeLayer('circle-layer-stroke');
+        }
+        if (map.current.getSource('circle-source')) {
+          map.current.removeSource('circle-source');
+        }
+        
+        // Add new circle source
+        map.current.addSource('circle-source', {
+          type: 'geojson',
+          data: circle
+        });
+        
+        // Add the circle fill layer
+        map.current.addLayer({
+          id: 'circle-layer',
+          type: 'fill',
+          source: 'circle-source',
+          paint: {
+            'fill-color': '#3498db',
+            'fill-opacity': 0.2
+          }
+        });
+
+        // Add the circle stroke layer
+        map.current.addLayer({
+          id: 'circle-layer-stroke',
+          type: 'line',
+          source: 'circle-source',
+          paint: {
+            'line-color': '#3498db',
+            'line-width': 2,
+            'line-opacity': 0.8
+          }
+        });
+        
+        // Update circle layer reference
+        circleLayerRef.current = 'circle-layer';
+      } else {
+        console.error('Turf.js is not available. Cannot create circle.');
+      }
+    } catch (error) {
+      console.error('Error creating circle:', error);
+    }
+    
+    // Update state with the new pin location and trigger analysis immediately
+    setPinLocation({ lng, lat });
+    if (onCoordinatesSelected) {
+      onCoordinatesSelected(lng, lat);
+    }
+  };
+  
+  // Function to handle search
+  const handleSearch = async () => {
+    if (!searchQuery || !map.current) return;
+    
+    try {
+      // Use MapTiler Geocoding API
+      const apiKey = process.env.REACT_APP_MAPTILER_API_KEY;
+      const response = await fetch(
+        `https://api.maptiler.com/geocoding/${encodeURIComponent(searchQuery)}.json?key=${apiKey}`
+      );
+      
+      if (!response.ok) {
+        throw new Error('Geocoding failed');
+      }
+      
+      const data = await response.json();
+      
+      if (data.features && data.features.length > 0) {
+        const location = data.features[0];
+        const [lng, lat] = location.center;
+        
+        // Fly to the location
+        map.current.flyTo({
+          center: [lng, lat],
+          zoom: 12,
+          essential: true
+        });
+        
+        // Simulate a click at this location to place a pin
+        handleMapClick({ lngLat: { lng, lat } });
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+    }
+  };
+  
+  // Function to handle analyze button click
+  const handleAnalyze = () => {
+    if (pinLocation && onCoordinatesSelected) {
+      // Call the parent component's handler with coordinates
+      onCoordinatesSelected(pinLocation.lng, pinLocation.lat);
+      
+      // Trigger the parent's handleSearch function
+      if (window.handleSearch) {
+        window.handleSearch();
+      }
+      // We also keep the pinLocation state so it's available if there's an error
+      // and the user needs to try again
+    }
+  };
+  
   return (
     <div className="map-container">
-      <div ref={mapContainer} className="map" />
+      {/* Search bar and analyze button */}
+      <div className="map-controls">
+        <div className="search-bar">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search for a location..."
+          />
+          <button className="search-button" onClick={handleSearch}>
+            <FaSearch />
+          </button>
+        </div>
+        
+        {pinLocation && onCoordinatesSelected && (
+          <button 
+            className="analyze-button" 
+            onClick={handleAnalyze}
+          >
+            Analyze Area
+          </button>
+        )}
+      </div>
+      
+      <div 
+        ref={mapContainer} 
+        className="map" 
+      />
       <WeatherCard weatherData={weatherData} />
     </div>
   );
