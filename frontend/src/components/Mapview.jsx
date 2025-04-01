@@ -2,12 +2,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as maptilersdk from '@maptiler/sdk';
 import '@maptiler/sdk/dist/maptiler-sdk.css';
 import './Mapview.css';
+import * as turf from '@turf/turf';
 
 // Add WeatherCard import at the top
 import WeatherCard from './WeatherCard';
 import { FaSearch, FaMapMarkerAlt } from 'react-icons/fa';
 
-function Mapview({ results, pieChartData, colors, weatherData, onCoordinatesSelected }) {  // Add weatherData and onCoordinatesSelected to props
+function Mapview({ results, pieChartData, colors, weatherData, onCoordinatesSelected, isPOIInteraction, setIsPOIInteraction }) {  // Add weatherData and onCoordinatesSelected to props
   const mapContainer = useRef(null);
   const map = useRef(null);
   const mapLoaded = useRef(false);
@@ -21,8 +22,8 @@ function Mapview({ results, pieChartData, colors, weatherData, onCoordinatesSele
   useEffect(() => {
     // Define updateMap function first before using it
     const updateMap = () => {
-      if (!map.current || !mapLoaded.current) {
-        console.log('Map not ready yet, cannot update');
+      if (!map.current || !mapLoaded.current || isPOIInteraction) {
+        console.log('Map not ready yet or POI interaction in progress');
         return;
       }
 
@@ -147,10 +148,6 @@ function Mapview({ results, pieChartData, colors, weatherData, onCoordinatesSele
           
           // Add popups for POIs
           map.current.on('click', 'poi-points', (e) => {
-            if (!e.features.length) return;
-            
-            // Prevent map from zooming when clicking POIs
-            e.preventDefault();
             
             // First, remove any existing popups to prevent duplicates
             const existingPopups = document.querySelectorAll('.maplibregl-popup');
@@ -289,7 +286,7 @@ function Mapview({ results, pieChartData, colors, weatherData, onCoordinatesSele
             
             // Create popup with enhanced content and wider width
             new maptilersdk.Popup({
-              maxWidth: '320px', // Increase the max width
+              maxWidth: '300px', // Increase the max width
               className: 'custom-popup'
             })
               .setLngLat(coordinates)
@@ -448,7 +445,7 @@ function Mapview({ results, pieChartData, colors, weatherData, onCoordinatesSele
       });
 
       // Add navigation controls
-      map.current.addControl(new maptilersdk.NavigationControl());
+      // map.current.addControl(new maptilersdk.NavigationControl());
       
       map.current.on('load', () => {
         console.log('Map style loaded');
@@ -457,6 +454,13 @@ function Mapview({ results, pieChartData, colors, weatherData, onCoordinatesSele
         
         // Add click event listener to the map
         map.current.on('click', handleMapClick);
+        
+        // Verify turf.js is available and log status
+        if (window.turf) {
+          console.log('Turf.js is available for circle creation');
+        } else {
+          console.error('Turf.js is NOT available - circle creation will fail');
+        }
       });
     }
 
@@ -484,8 +488,8 @@ function Mapview({ results, pieChartData, colors, weatherData, onCoordinatesSele
       pinMarkerRef.current = null;
     }
     
-    // Remove existing circle layer if any
-    if (circleLayerRef.current) {
+    // Only remove circle layer if we're not in selection mode
+    if (circleLayerRef.current && !onCoordinatesSelected) {
       if (map.current.getLayer('circle-layer')) {
         map.current.removeLayer('circle-layer');
       }
@@ -522,55 +526,52 @@ function Mapview({ results, pieChartData, colors, weatherData, onCoordinatesSele
     
     // Create a circle using turf.js
     try {
-      // Check if turf is available
-      if (window.turf) {
-        const circle = window.turf.circle(center, radiusInKm, options);
-        
-        // Remove existing circle layers and source
-        if (map.current.getLayer('circle-layer')) {
-          map.current.removeLayer('circle-layer');
-        }
-        if (map.current.getLayer('circle-layer-stroke')) {
-          map.current.removeLayer('circle-layer-stroke');
-        }
-        if (map.current.getSource('circle-source')) {
-          map.current.removeSource('circle-source');
-        }
-        
-        // Add new circle source
-        map.current.addSource('circle-source', {
-          type: 'geojson',
-          data: circle
-        });
-        
-        // Add the circle fill layer
-        map.current.addLayer({
-          id: 'circle-layer',
-          type: 'fill',
-          source: 'circle-source',
-          paint: {
-            'fill-color': '#3498db',
-            'fill-opacity': 0.2
-          }
-        });
-
-        // Add the circle stroke layer
-        map.current.addLayer({
-          id: 'circle-layer-stroke',
-          type: 'line',
-          source: 'circle-source',
-          paint: {
-            'line-color': '#3498db',
-            'line-width': 2,
-            'line-opacity': 0.8
-          }
-        });
-        
-        // Update circle layer reference
-        circleLayerRef.current = 'circle-layer';
-      } else {
-        console.error('Turf.js is not available. Cannot create circle.');
+      // Use the directly imported turf instead of window.turf
+      console.log('Creating circle with radius:', radiusInKm, 'km');
+      const circle = turf.circle(center, radiusInKm, options);
+      
+      // Remove existing circle layers and source
+      if (map.current.getLayer('circle-layer')) {
+        map.current.removeLayer('circle-layer');
       }
+      if (map.current.getLayer('circle-layer-stroke')) {
+        map.current.removeLayer('circle-layer-stroke');
+      }
+      if (map.current.getSource('circle-source')) {
+        map.current.removeSource('circle-source');
+      }
+      
+      // Add new circle source
+      map.current.addSource('circle-source', {
+        type: 'geojson',
+        data: circle
+      });
+      
+      // Add the circle fill layer with increased opacity for better visibility
+      map.current.addLayer({
+        id: 'circle-layer',
+        type: 'fill',
+        source: 'circle-source',
+        paint: {
+          'fill-color': '#3498db',
+          'fill-opacity': 0.4  // Increased for better visibility
+        }
+      });
+      
+      // Add circle stroke layer with higher contrast
+      map.current.addLayer({
+        id: 'circle-layer-stroke',
+        type: 'line',
+        source: 'circle-source',
+        paint: {
+          'line-color': '#2980b9',
+          'line-width': 3,
+          'line-opacity': 1
+        }
+      });
+
+      // Update circle layer reference
+      circleLayerRef.current = true;
     } catch (error) {
       console.error('Error creating circle:', error);
     }

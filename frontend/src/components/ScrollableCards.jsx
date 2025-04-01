@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
-import AirQualityCard from './AirQualityCard';
-import WeatherCard from './WeatherCard';
+import AirQualityCard from './AirqualityCard';
 import './ScrollableCards.css';
 
 const ScrollableCards = ({ analysis, city, area, handleNewAnalysis }) => {
   const scrollContainerRef = useRef(null);
   const [isScrolled, setIsScrolled] = useState(false);
+  // Removed activeTab state since we no longer have tabs
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,7 +36,7 @@ const ScrollableCards = ({ analysis, city, area, handleNewAnalysis }) => {
       {/* First card with peek effect */}
       <div className="card peek-card">
         <div className="peek-indicator"></div>
-        <div className="scroll-prompt">👇🏻 Hover HERE & Scroll to see full analysis 📬</div>
+        <div className="scroll-prompt">👇🏻 Hover HERE & Scroll to see full analysis </div>
         <div className="analysis-scroll">
           <div className="analysis-scroll-content">
           </div>
@@ -44,15 +44,13 @@ const ScrollableCards = ({ analysis, city, area, handleNewAnalysis }) => {
       </div>
 
       {/* Air Quality Card */}
-      <div className="card dual-card">
-        <div className="air-quality-section">
-          {analysis.air_quality && (
-            <AirQualityCard
-              airQuality={analysis.air_quality}
-              location={analysis.air_quality.location || { city, area }}
-            />
-          )}
-        </div>
+      <div className="air-quality-section">
+        {analysis.air_quality && (
+          <AirQualityCard
+            airQuality={analysis.air_quality}
+            location={analysis.air_quality.location || { city, area }}
+          />
+        )}
       </div>
 
       {/* Visualization Card */}
@@ -136,60 +134,90 @@ const ScrollableCards = ({ analysis, city, area, handleNewAnalysis }) => {
         </div>
       </div>
 
-      {/* Analysis Card */}
+      {/* Enhanced Environmental Impact Analysis Dashboard */}
       <div className="card analysis-card">
         <div className="analysis-header">
           <h3>Environmental Impact Analysis</h3>
+          {analysis?.category && (
+            <div className={`status-badge ${analysis.category ? analysis.category.toLowerCase() : 'unknown'}`}>
+              {analysis.category}
+            </div>
+          )}
         </div>
         <div className="analysis-content">
-          <div className="score-container">
-            <h2 className="score">{analysis?.ai_rating || "0"}/100</h2>
-            <p className="score-label">Environmental Impact Rating</p>
-          </div>
-
-          <div className="score-bar">
-            {Array.from({ length: 20 }).map((_, index) => (
-              <div
-                key={index}
-                className={`score-segment ${index < (analysis?.ai_rating || 0) / 5 ? 'active' : ''}`}
+          {/* Rating Gauge */}
+          <div className="impact-rating-container">
+            <div className="rating-info">
+              <h2 className="rating-title">{analysis?.ai_rating || "0"}/100</h2>
+              <p className="rating-description">
+                Environmental Impact Rating
+              </p>
+            </div>
+            
+            <div className="rating-gauge">
+              <div 
+                className="gauge-fill" 
                 style={{
-                  backgroundColor: index < (analysis?.ai_rating || 0) / 5
-                    ? `hsl(${160 - index * 8}, 80%, ${50 + index * 1.5}%)`
-                    : '#e0e0e0'
+                  width: `${analysis?.ai_rating || 0}%`,
+                  background: `linear-gradient(90deg, 
+                    hsl(140, 80%, 50%) 0%, 
+                    hsl(${Math.max(140 - (analysis?.ai_rating || 0) * 1.4, 0)}, 80%, 50%) 100%)`
                 }}
-              />
-            ))}
-          </div>
-
-          <div className="summary">
-            <p>
-              {typeof analysis?.summary === 'object'
-                ? JSON.stringify(analysis.summary)
-                : analysis?.summary || "No summary available."}
-            </p>
-          </div>
-
-          {analysis?.insights && (
-            <div className="insights-section">
-              <h4>Key Insights</h4>
-              <ul className="insights-list">
-                {analysis.insights.map((insight, index) => (
-                  <li key={index}>{insight}</li>
-                ))}
-              </ul>
+              ></div>
+              <div 
+                className="gauge-marker" 
+                style={{ left: `${analysis?.ai_rating || 0}%` }}
+              >
+                <div className="gauge-value">{analysis?.ai_rating || "0"}</div>
+              </div>
             </div>
-          )}
-
-          {analysis?.recommendations && (
-            <div className="recommendations-section">
-              <h4>Recommendations</h4>
-              <ul className="recommendations-list">
-                {analysis.recommendations.map((rec, index) => (
-                  <li key={index}>{rec}</li>
-                ))}
-              </ul>
+            
+            <div className="gauge-labels">
+              <span>Excellent</span>
+              <span>Good</span>
+              <span>Fair</span>
+              <span>Poor</span>
+              <span>Critical</span>
             </div>
-          )}
+          </div>
+          
+          {/* Summary Section */}
+          <div className="summary-container">
+            <div className="summary-header">
+              <div className="summary-icon">📝</div>
+              <h4>Summary</h4>
+            </div>
+            <div className="summary-content">
+              <p>
+                {typeof analysis?.summary === 'object'
+                  ? JSON.stringify(analysis.summary)
+                  : analysis?.summary || "No summary available."}
+              </p>
+            </div>
+          </div>
+          
+          {/* Environmental Risks Section */}
+          <div className="risks-section">
+            <h4>Potential Environmental Risks</h4>
+            <div className="risks-list">
+              {analysis?.environmental_impact?.risks && analysis.environmental_impact.risks.length > 0 ? (
+                analysis.environmental_impact.risks.map((risk, index) => (
+                  <div key={index} className={`risk-item ${risk.level ? risk.level.toLowerCase() : 'unknown'}`}>
+                    <div className="risk-level-indicator">
+                      <span className="risk-level">{risk.level}</span>
+                    </div>
+                    <div className="risk-description">
+                      {risk.description}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="no-data">No risk data available.</p>
+              )}
+            </div>
+          </div>
+          
+          {/* Key Insights section removed as requested */}
         </div>
       </div>
 

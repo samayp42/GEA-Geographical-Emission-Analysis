@@ -14,6 +14,7 @@ function App() {
   const [error, setError] = useState(null);
   const [analysis, setAnalysis] = useState(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
+  const [isPOIInteraction, setIsPOIInteraction] = useState(false);  // Add this line
   
   // Colors for the pie chart
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF1919'];
@@ -32,7 +33,9 @@ function App() {
       const response = await axios.post(`${API_URL}/analyze-area`, {
         longitude: coordinates.lng,
         latitude: coordinates.lat,
-        radius: 5 // 5km radius
+        radius: 5, // 5km radius
+        include_factors: true, // Request detailed environmental factors
+        include_comparison: true // Request comparison with similar areas
       });
       console.log("Analysis response:", response.data);
       
@@ -73,7 +76,6 @@ function App() {
       {!showAnalysis ? (
         // Initial view with map for pin dropping
         <>
-          {/* Map with pin-drop functionality */}
           <div className="map-container">
             <Mapview 
               results={null} 
@@ -81,6 +83,8 @@ function App() {
               colors={COLORS}
               weatherData={null}
               onCoordinatesSelected={handleCoordinatesSelected}
+              isPOIInteraction={isPOIInteraction}
+              setIsPOIInteraction={setIsPOIInteraction}
             />
           </div>
           {loading && (
@@ -91,20 +95,19 @@ function App() {
           )}
         </>
       ) : (
-        // Analysis view with scrollable cards over map background
         <>
-          {/* Map in background */}
           <div className="map-container">
             <Mapview 
               results={results} 
               pieChartData={analysis?.pie_chart_data} 
               colors={COLORS}
               weatherData={analysis?.weather}
-              onCoordinatesSelected={null} // Disable pin-drop in analysis view
+              onCoordinatesSelected={null}
+              isPOIInteraction={isPOIInteraction}
+              setIsPOIInteraction={setIsPOIInteraction}
             />
           </div>
           
-          {/* Scrollable cards overlay */}
           <ScrollableCards 
             analysis={analysis} 
             city={analysis?.geocode?.city || 'Selected Area'} 

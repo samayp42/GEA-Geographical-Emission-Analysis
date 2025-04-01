@@ -1,17 +1,42 @@
 .air-quality-card {
-    background: linear-gradient(135deg, rgb(106, 147, 88), rgb(93, 24, 145));
-    color: white;
-    border-radius: 12px;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    width: 100%;
-    height: 100%;
+    /* Background with animated clouds */
+    background: url('../assets/Card_bg.png') no-repeat center center, 
+                url('../assets/Clouds_animation.gif') no-repeat center center;
+    background-size: cover;
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease-in-out;
-    padding: 20px;
     max-width: 100%;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 0;
+  }
+  
+  /* Apply the animation to the cloud background */
+  .air-quality-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('../assets/Card_bg.png') no-repeat center center;
+      background-size: cover;
+      z-index: 0;  /* Changed from 1 to 0 */
+      opacity: 0;
+      animation: cloudMovement 50s linear infinite;
+  }
+  
+  .card-content {
+    position: relative;
+    z-index: 2;  /* Increased z-index to ensure content is above background */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
     box-sizing: border-box;
   }
   
@@ -20,21 +45,7 @@
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
   }
   
-  .card-background-effect {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('../assets/Clouds_animation.gif') center/cover no-repeat,
-      url('../assets/Card_bg.png') bottom/contain no-repeat,
-      radial-gradient(circle at 20% 30%, rgba(70, 90, 120, 0.15), transparent 70%),
-      radial-gradient(circle at 80% 70%, rgba(60, 80, 110, 0.12), transparent 70%);
-    opacity: 0.35;
-    z-index: 0;
-    pointer-events: none;
-    mix-blend-mode: overlay;
-  }
+  /* Card background effect removed as requested */
   
   .card-content {
     position: relative;
@@ -46,35 +57,74 @@
     box-sizing: border-box;
   }
   
+  /* Add this for the cough image positioning */
+
+  
+  .cough-image:hover {
+      transform: scale(1.15) rotate(-5deg);
+      opacity: 1;
+  }
+  
+  /* Add this for the background animation */
+  @keyframes cloudMovement {
+      0% {
+          background-position: 0% 50%;
+      }
+      100% {
+          background-position: 100% 50%;
+      }
+  }
+  
+  /* Apply the animation to the cloud background */
+  .air-quality-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('../assets/Card_bg.png') no-repeat center center;
+      background-size: cover;
+      z-index: 1;
+      opacity: 1;
+      animation: cloudMovement 50s linear infinite;
+  }
+  
   .location-info {
     margin-bottom: 16px;
     display: flex;
     flex-direction: column;
+    border: none;
+    border-bottom: none;
+    position: relative;
+  }
+  
+  .location-info::after {
+    display: none;
   }
   
   .location-info h2 {
-    font-size: 1.3rem;
+    font-size: 1.8rem;
     font-weight: 600;
     margin: 0;
-    color: rgba(255, 255, 255, 0.98);
+    color: rgba(0, 0, 0, 0.98);
     letter-spacing: 0.3px;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    border-bottom: none;
   }
   
   .timestamp {
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(0, 0, 0, 0.7);
     margin: 4px 0 0 0;
+    padding-left: 38px;
   }
-
-  
-
   
   .aqi-header h3 {
     font-size: 0.85rem;
     font-weight: 500;
     margin: 0;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(14, 11, 11, 0.8);
     text-transform: uppercase;
     letter-spacing: 1px;
     text-align: center;
@@ -82,6 +132,7 @@
   
   .aqi-value {
     text-align: center;
+    color: rgba(255, 65, 54, 0.1);
   }
   
   .aqi-display {
@@ -96,11 +147,12 @@
     font-weight: 700;
     line-height: 1;
     text-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    background: linear-gradient(45deg, #fff, rgba(255, 255, 255, 0.95));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    /* Remove these lines */
+    /* background: linear-gradient(45deg, #fff, rgba(255, 255, 255, 0.95)); */
+    /* -webkit-background-clip: text; */
+    /* -webkit-text-fill-color: transparent; */
     animation: subtle-pulse 4s infinite ease-in-out;
-  }
+}
   
   .aqi-text-container {
     margin-top: 4px;
@@ -305,20 +357,9 @@
   }
   
   /* Add a particle effect to the card */
+  /* Remove particle effect to prevent overlapping cards */
   .air-quality-card::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 8%),
-      radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.03) 0%, transparent 8%),
-      radial-gradient(circle at 50% 80%, rgba(255, 255, 255, 0.03) 0%, transparent 8%),
-      radial-gradient(circle at 70% 30%, rgba(255, 255, 255, 0.03) 0%, transparent 8%),
-      radial-gradient(circle at 90% 60%, rgba(255, 255, 255, 0.03) 0%, transparent 8%);
-    pointer-events: none;
-    z-index: 0;
+      display: none;
   }
   
   /* Media queries for responsive design */
@@ -471,6 +512,38 @@
   transform: translateY(-2px);
   background: rgba(0, 0, 0, 0.45);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.air-quality-pollutants-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.air-quality-pollutant-item {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 1em;
+  display: inline-block;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+.air-quality-pollutant-item.high {
+  background: rgba(255, 65, 54, 0.1);
+  border-left: 3px solid #ff4136;
+}
+
+.air-quality-pollutant-item.medium {
+  background: rgba(255, 220, 0, 0.1);
+  border-left: 3px solid #ffdc00;
+}
+
+.air-quality-pollutant-item.low {
+  background: rgba(46, 204, 64, 0.1);
+  border-left: 3px solid #2ecc40;
 }
   
   

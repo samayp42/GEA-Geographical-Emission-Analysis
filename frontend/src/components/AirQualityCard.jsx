@@ -1,5 +1,5 @@
-import React from "react"
-import "./AirQualityCard.css"
+import React from "react";
+import './AirQualityCard.css';
 
 const getAQILevel = (aqi) => {
   if (aqi <= 50) return { text: "Good", color: "#4CAF50" }
@@ -55,7 +55,7 @@ const calculateAQI = (components) => {
     co: [0, 4.4, 9.4, 12.4, 15.4, 30.4, 50.4],
   }
 
-  const aqiScale = [0, 50, 100, 150, 200, 300, 500]
+  const aqiScale = [0, 25, 50, 75, 100, 125, 150]
 
   let overallAQI = 0
 
@@ -77,15 +77,21 @@ const calculateAQI = (components) => {
 }
 
 const AirQualityCard = ({ airQuality, location }) => {
-  if (!airQuality) return null
+  if (!airQuality) return null;
 
-  const calculatedAQI = calculateAQI(airQuality.components)
-  const aqiLevel = getAQILevel(calculatedAQI)
-  const components = airQuality.components
+  const calculatedAQI = calculateAQI(airQuality.components);
+  const aqiLevel = getAQILevel(calculatedAQI);
+  const components = airQuality.components;
+
+  // Dynamic background style based on AQI level
+  const cardStyle = {
+    background: `linear-gradient(135deg, ${aqiLevel.color}CC, ${aqiLevel.color}80)`,
+    boxShadow: '0 6px 24px rgba(0, 0, 0, 0.18)',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+  };
 
   return (
-    <div className="air-quality-card">
-      <div className="card-background-effect"></div>
+    <div className="air-quality-card" style={cardStyle}>
       <div className="card-content">
         <div className="location-info">
           <h2>📍 {location.area}, {location.city}</h2>
@@ -98,7 +104,9 @@ const AirQualityCard = ({ airQuality, location }) => {
           </div>
           <div className="aqi-value">
             <div className="aqi-display">
-              <span className="aqi-number">{calculatedAQI}</span>
+              <span className="aqi-number" style={{ color: aqiLevel.color }}>
+                {calculatedAQI}
+              </span>
               <div className="aqi-text-container">
                 <span className="aqi-text" style={{ backgroundColor: aqiLevel.color }}>
                   {aqiLevel.text}
@@ -110,7 +118,7 @@ const AirQualityCard = ({ airQuality, location }) => {
 
         <div className="pollutants-grid">
           {Object.entries(components).map(([key, value]) => {
-            const { unit } = getUnitAndTimeframe(key)
+            const { unit } = getUnitAndTimeframe(key);
             return (
               <div key={key} className="pollutant-item">
                 <div className="pollutant-details">
@@ -118,12 +126,12 @@ const AirQualityCard = ({ airQuality, location }) => {
                   <span className="pollutant-value">{value.toFixed(2)} <span className="unit">{unit}</span></span>
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default AirQualityCard
+export default AirQualityCard;

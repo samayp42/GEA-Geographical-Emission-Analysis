@@ -21,7 +21,7 @@ app.add_middleware(
 )
 
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-model = genai.GenerativeModel('gemini-2.0-flash-thinking-exp')
+model = genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
 
 def get_pois_overpass(area_name, city_name, poi_categories):
     """Get POIs using Overpass API for multiple categories within a 1km radius."""
@@ -713,31 +713,24 @@ async def analyze_area(area_request: dict):
         
         # Updated analysis prompt for emission sources analysis for EHSO
         analysis_prompt = f"""
-        Imagine you are an Environmental Health and Safety Officer (EHSO) conducting an environmental assessment of {area_name}, {city_name}. 
-        Create a professional analysis that covers:
+        imagine you are an environmental health expert.
+        Analyze the environmental impact for {area_name}, {city_name} and provide a structured assessment.
+        Based on the POIs: {json.dumps(categorized_pois, indent=2)}
 
-        1. The primary emission sources in this area and their potential environmental impact
-        2. The distribution and concentration of different emission types
-        3. Potential environmental and health concerns for nearby communities
-        4. Areas that may require monitoring or mitigation measures
+        Return a JSON with:
+        - "category": One word status (Good/Moderate/Poor/Severe/Critical)
+        - "summary": Concise analysis of environmental profile (4-5 sentences)
+        - "ai_rating": Numerical score 0-100
+        - "key_factors": Array of 3-4 main factors affecting the area's environmental health
+        - "risks": Array of potential environmental risks, each with:
+            - "level": (Low/Medium/High)
+            - "description": Brief description
+        -"Key_Insights": Array of 3-4 key insights, each with:
+            - "description": Brief description
+            - "impact": (Low/Medium/High)
 
-        Use a professional, analytical tone appropriate for an environmental report. 
-        Include specific references to the emission sources and their distribution:
-        {json.dumps(categorized_pois, indent=2)}
 
-        Focus on environmental concerns such as:
-        - Air quality impacts from industrial and transportation sources
-        - Potential water contamination from waste facilities
-        - Cumulative effects of multiple emission sources
-        - Proximity of emission sources to residential areas
-    
-        Keep it concise but informative, around 4-5 sentences.
-        
-        Provide a structured JSON response with the following keys:
-        - "summary": (in simple text, *NOT in JSON*) A concise Pointwise summary of the environmental emission profile of the area, highlighting the key emission sources and potential environmental concerns.
-        - "ai_rating": A numerical rating from 0 to 100 representing the overall environmental impact level of this area, where 0 represents minimal emissions and 100 represents severe environmental concerns requiring immediate attention.
-        
-        IMPORTANT: Only return the raw JSON, no additional text or explanations. The response must start with '{{' and end with '}}'.
+        IMPORTANT: Return only the raw JSON.
         """
 
         # Get analysis
@@ -747,30 +740,18 @@ async def analyze_area(area_request: dict):
             # Extract JSON from the response
             json_start = response.text.find('{')
             json_end = response.text.rfind('}') + 1
-            
             if json_start == -1 or json_end == -1:
                 raise ValueError("No JSON found in the response")
                 
             json_str = response.text[json_start:json_end]
             analysis_results = json.loads(json_str)
+            print(f"Analysis results: {analysis_results}")
             
-            # Combine all results
-            final_results = {
-                "summary": analysis_results.get("summary", ""),
-                "pie_chart_data": pie_chart_data,  # Use our pre-generated data instead of LLM's
-                "ai_rating": analysis_results.get("ai_rating", 0),
-                "geocode": geocode,
-                "bbox": bbox,
-                "geojson": pois_geojson,  # Include only the POIs GeoJSON
-                "pois": categorized_pois  # Keep the POIs separate for the frontend
-            }
-            
-            # After getting geocode data
-            # Inside the analyze_area function, after getting air quality data
-            # Find this section:
+            # Get air quality and weather data
             air_quality_data = get_air_quality(geocode['lat'], geocode['lon'])
+            weather_data = get_weather_data(geocode['lat'], geocode['lon'])
             
-            # Include air quality data and location info in final_results
+            # Include all environmental impact analysis data in final_results
             final_results = {
                 "summary": analysis_results.get("summary", ""),
                 "pie_chart_data": pie_chart_data,
@@ -782,27 +763,25 @@ async def analyze_area(area_request: dict):
                 "air_quality": {
                     **air_quality_data,
                     "location": {
-                        "city": geocode.get("city", "Unknown City"),
-                        "area": geocode.get("area", "Unknown Area")
+                        "city": city_name,
+                        "area": area_name
                     }
+                },
+                "weather": weather_data,
+                # Include the complete environmental impact analysis
+                "environmental_impact": {
+                    "category": analysis_results.get("category", ""),
+                    "summary": analysis_results.get("summary", ""),
+                    "ai_rating": analysis_results.get("ai_rating", 0),
+                    "key_factors": analysis_results.get("key_factors", []),
+                    "risks": analysis_results.get("risks", []),
+                    # Process insights to ensure they have the expected structure
+                    "insights": [
+                        {"description": insight if isinstance(insight, str) else insight.get("description", str(insight)),
+                         "impact": insight.get("impact", "Medium") if isinstance(insight, dict) else "Medium"}
+                        for insight in analysis_results.get("Key Insights", analysis_results.get("key_insights", analysis_results.get("insights", [])))
+                    ]
                 }
-            }
-            
-            # And modify it to include weather data:
-            air_quality_data = get_air_quality(geocode['lat'], geocode['lon'])
-            weather_data = get_weather_data(geocode['lat'], geocode['lon'])
-            
-            # Include air quality and weather data in final_results
-            final_results = {
-                "summary": analysis_results.get("summary", ""),
-                "pie_chart_data": pie_chart_data,
-                "ai_rating": analysis_results.get("ai_rating", 0),
-                "geocode": geocode,
-                "bbox": bbox,
-                "geojson": pois_geojson,
-                "pois": categorized_pois,
-                "air_quality": air_quality_data,
-                "weather": weather_data
             }
             return final_results
             
