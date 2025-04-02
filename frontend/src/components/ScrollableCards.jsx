@@ -2,11 +2,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import AirQualityCard from './AirqualityCard';
 import './ScrollableCards.css';
+import { FaSun, FaMoon, FaCheck, FaTimes, FaLungs, FaHeartbeat, FaAllergies, FaVirus, FaWind } from 'react-icons/fa';
+import { GiLungs } from 'react-icons/gi';
+import { TbMoodSick } from 'react-icons/tb';
 
 const ScrollableCards = ({ analysis, city, area, handleNewAnalysis }) => {
   const scrollContainerRef = useRef(null);
   const [isScrolled, setIsScrolled] = useState(false);
-  // Removed activeTab state since we no longer have tabs
+  const [darkMode, setDarkMode] = useState(false); // Set light theme as default
+  const [selectedCondition, setSelectedCondition] = useState(null); // Track selected health condition
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,11 +25,39 @@ const ScrollableCards = ({ analysis, city, area, handleNewAnalysis }) => {
       return () => scrollContainer.removeEventListener('scroll', handleScroll);
     }
   }, []);
+  
+  // Apply dark mode class to body
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-theme');
+    } else {
+      document.body.classList.remove('dark-theme');
+    }
+  }, [darkMode]);
+  
+  // Set the first condition as selected when data loads
+  useEffect(() => {
+    if (analysis?.health_card?.recommendations?.conditions) {
+      const conditions = Object.keys(analysis.health_card.recommendations.conditions);
+      if (conditions.length > 0 && !selectedCondition) {
+        setSelectedCondition(conditions[0]);
+      }
+    }
+  }, [analysis, selectedCondition]);
+  
+  const toggleTheme = () => {
+    setDarkMode(!darkMode);
+  };
 
   if (!analysis) return null;
 
   return (
-    <div className="scrollable-container" ref={scrollContainerRef}>
+    <div className={`scrollable-container ${darkMode ? 'dark-theme' : 'light-theme'}`} ref={scrollContainerRef}>
+      {/* Theme toggle button */}
+      <button onClick={toggleTheme} className="theme-toggle-button" style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 1000 }}>
+        {darkMode ? <FaSun className="theme-icon" /> : <FaMoon className="theme-icon" />}
+      </button>
+
       {/* Search overlay */}
       <div className="search-overlay">
         <button onClick={handleNewAnalysis} className="primary-button">
@@ -215,6 +247,152 @@ const ScrollableCards = ({ analysis, city, area, handleNewAnalysis }) => {
                 <p className="no-data">No risk data available.</p>
               )}
             </div>
+          </div>
+          
+          {/* Health Recommendations Card - Redesigned to match screenshot */}
+          <div className="card health-recommendations-card">
+            <div className="health-recommendations-header">
+              <div className="health-icon-title">
+                <span className="health-icon">🏥</span>
+                <h3>Prevent Health Problems: Understand Your Risks</h3>
+              </div>
+              <div className="cigarettes-badge">
+                <div className="cigarette-icon">
+                  <img src={require('../assets/cough.png')} alt="Cigarette" className="cigarette-image" />
+                  <img src={require('../assets/Clouds_animation.gif')} alt="Smoke" className="smoke-animation" />
+                </div>
+                <span>{analysis?.health_card?.cigarettes_per_day || 0} Cigarettes / Day</span>
+              </div>
+            </div>
+            
+            {/* Location name */}
+            <div className="health-location">
+              {analysis?.air_quality?.location?.city || city || 'Your Location'}
+            </div>
+            
+            {/* Horizontal condition buttons */}
+            {analysis?.health_card?.recommendations?.conditions && (
+              <div className="health-condition-buttons">
+                {Object.entries(analysis.health_card.recommendations.conditions).map(([condition, data], index) => {
+                  const isSelected = selectedCondition === condition;
+                  let icon;
+                  switch(condition.toLowerCase()) {
+                    case 'asthma':
+                      icon = <FaLungs />;
+                      break;
+                    case 'heart issues':
+                    case 'heart_issues':
+                      icon = <FaHeartbeat />;
+                      break;
+                    case 'allergies':
+                      icon = <FaAllergies />;
+                      break;
+                    case 'sinus':
+                      icon = <FaWind />;
+                      break;
+                    case 'cold/flu':
+                    case 'cold_flu':
+                      icon = <FaVirus />;
+                      break;
+                    case 'chronic (copd)':
+                    case 'chronic_copd':
+                      icon = <GiLungs />;
+                      break;
+                    default:
+                      icon = <TbMoodSick />;
+                      break;
+                  }
+                  
+                  return (
+                    <button
+                      key={index}
+                      className={`condition-button ${isSelected ? 'selected' : ''}`}
+                      onClick={() => setSelectedCondition(condition)}
+                    >
+                      <span className="condition-icon">{icon}</span>
+                      <span className="condition-name">{condition.replace('_', ' ')}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            
+            {/* Selected condition details */}
+            {selectedCondition && analysis?.health_card?.recommendations?.conditions && (
+              <div className="selected-condition-details">
+                {(() => {
+                  const data = analysis.health_card.recommendations.conditions[selectedCondition];
+                  const riskLevel = data.risk_level ? data.risk_level.toLowerCase() : 'medium';
+                  const displayName = selectedCondition.replace('_', ' ');
+                  
+                  // Show condition-specific images
+                  const conditionImage = (
+                    <div className="condition-illustration">
+                      <img 
+                        src={require(`../assets/images/${selectedCondition.toLowerCase().replace(/[\s()]/g, '')}.png`)} 
+                        alt={displayName} 
+                        style={{ width: '100%', height: 'auto', maxWidth: '200px' }} 
+                      />
+                    </div>
+                  );
+                  
+                  return (
+                    <div className="condition-detail-container">
+                      <div className="condition-left-panel">
+                        {conditionImage}
+                        <div className="risk-indicator">
+                          <div className={`risk-badge ${riskLevel}`}>
+                            {riskLevel === 'mid' ? 'MID' : riskLevel.toUpperCase()} Chances of {displayName}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="condition-right-panel">
+                        <div className="condition-header">
+                          <h4>{displayName}</h4>
+                          <div className={`risk-badge ${riskLevel}`}>{riskLevel.toUpperCase()}</div>
+                        </div>
+                        
+                        <div className="condition-description">
+                          <p>✎ Risk of {displayName} symptoms is <strong>{riskLevel}</strong> when AQI is {data.aqi_range || 'Moderate (50-150)'}.</p>
+                          <p>{data.description || `🗒️ Moderate symptoms including frequent wheezing, noticeable shortness of breath, chest tightness, and persistent cough.`}</p>
+                        </div>
+                        
+                        <div className="recommendations-columns">
+                          <div className="do-column">
+                            <div className="column-header">
+                              <FaCheck className="check-icon" />
+                              <span>Do's :</span>
+                            </div>
+                            <ul className="recommendation-list">
+                              {data.do && data.do.map((item, i) => (
+                                <li key={i}>{item}</li>
+                              ))}
+                            </ul>
+                          </div>
+                          
+                          <div className="dont-column">
+                            <div className="column-header">
+                              <FaTimes className="x-icon" />
+                              <span>Dont's :</span>
+                            </div>
+                            <ul className="recommendation-list">
+                              {data.dont && data.dont.map((item, i) => (
+                                <li key={i}>{item}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+            
+            {!analysis?.health_card?.recommendations?.conditions && (
+              <p className="no-data">No health recommendations available.</p>
+            )}
           </div>
           
           {/* Key Insights section removed as requested */}

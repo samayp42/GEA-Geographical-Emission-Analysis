@@ -7,6 +7,7 @@ import json
 import requests
 import math
 from urllib.parse import quote
+from datetime import datetime
 
 load_dotenv()
 
@@ -21,7 +22,7 @@ app.add_middleware(
 )
 
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-model = genai.GenerativeModel('gemini-2.5-pro-exp-03-25')
+model = genai.GenerativeModel('gemini-2.0-flash-lite')
 
 def get_pois_overpass(area_name, city_name, poi_categories):
     """Get POIs using Overpass API for multiple categories within a 1km radius."""
@@ -667,6 +668,92 @@ def reverse_geocode(lat, lon):
             'display_name': 'Unknown Location'
         }
 
+def generate_health_recommendations(location, air_quality, weather):
+    """Generate health recommendations using LLM based on environmental data."""
+    pm25_level = air_quality['components'].get('pm2_5', 0)
+    cigarettes_per_day = pm25_level / 22
+
+    # Simplified and more structured prompt
+    llm_prompt = f"""
+    Generate health recommendations based on:
+    Location: {location['display_name']}
+    AQI: {air_quality['aqi']}
+    PM2.5: {pm25_level} μg/m³
+    Weather: {weather['description']}
+
+    Return a JSON object with the following structure:
+    {{
+        "conditions": {{
+            "Asthma": {{
+                "risk_level": "Low/Medium/High",
+                "do": ["action1", "action2,..."],
+                "dont": ["action1", "action2,..."]
+            }},
+            "Heart_Issues": {{
+                "risk_level": "Low/Medium/High",
+                "do": ["action1", "action2,..."],
+                "dont": ["action1", "action2,..."]
+            }},
+            "Allergies": {{
+                "risk_level": "Low/Medium/High",
+                "do": ["action1", "action2,..."],
+                "dont": ["action1", "action2,..."]
+            }},
+            "Sinus": {{
+                "risk_level": "Low/Medium/High",
+                "do": ["action1", "action2,..."],
+                "dont": ["action1", "action2,..."]
+            }},
+            "Cold_Flu": {{
+                "risk_level": "Low/Medium/High",
+                "do": ["action1", "action2,..."],
+                "dont": ["action1", "action2,..."]
+            }},
+            "COPD": {{
+                "risk_level": "Low/Medium/High",
+                "do": ["action1", "action2,..."],
+                "dont": ["action1", "action2,..."]
+            }}
+        }}
+    }}
+
+    Respond only with the JSON object, no additional text.
+    """
+
+    try:
+        response = model.generate_content(llm_prompt)
+        raw_response = response.text.strip()
+        
+        # Find the JSON object in the response
+        json_start = raw_response.find('{')
+        json_end = raw_response.rfind('}') + 1
+        if json_start != -1 and json_end != -1:
+            json_str = raw_response[json_start:json_end]
+            health_recommendations = json.loads(json_str)
+        else:
+            raise ValueError("No valid JSON found in response")
+
+    except Exception as e:
+        print(f"Error in health recommendations: {str(e)}")
+        # Provide a default structure if the LLM fails
+        health_recommendations = {
+            "conditions": {
+                "General": {
+                    "risk_level": "Medium",
+                    "do": ["Stay hydrated", "Monitor air quality", "Limit outdoor activities if needed"],
+                    "dont": ["Avoid strenuous outdoor activities", "Don't ignore health symptoms"]
+                }
+            }
+        }
+
+    return {
+        "location": location['display_name'],
+        "cigarettes_per_day": round(cigarettes_per_day, 1),
+        "air_quality": air_quality,
+        "weather": weather,
+        "recommendations": health_recommendations
+    }
+
 @app.post("/analyze-area")
 async def analyze_area(area_request: dict):
     # Get coordinates from request
@@ -724,9 +811,9 @@ async def analyze_area(area_request: dict):
         - "key_factors": Array of 3-4 main factors affecting the area's environmental health
         - "risks": Array of potential environmental risks, each with:
             - "level": (Low/Medium/High)
-            - "description": Brief description
+            - "description": Brief description 
         -"Key_Insights": Array of 3-4 key insights, each with:
-            - "description": Brief description
+            - "description": Brief description of the insight and it should be more focused on the overall air quality impact of the area.
             - "impact": (Low/Medium/High)
 
 
@@ -745,11 +832,13 @@ async def analyze_area(area_request: dict):
                 
             json_str = response.text[json_start:json_end]
             analysis_results = json.loads(json_str)
-            print(f"Analysis results: {analysis_results}")
             
             # Get air quality and weather data
             air_quality_data = get_air_quality(geocode['lat'], geocode['lon'])
             weather_data = get_weather_data(geocode['lat'], geocode['lon'])
+            
+            # Generate health card data
+            health_card_data = generate_health_recommendations(location_info, air_quality_data, weather_data)
             
             # Include all environmental impact analysis data in final_results
             final_results = {
@@ -768,6 +857,7 @@ async def analyze_area(area_request: dict):
                     }
                 },
                 "weather": weather_data,
+                "health_card": health_card_data,  # Add health card data here
                 # Include the complete environmental impact analysis
                 "environmental_impact": {
                     "category": analysis_results.get("category", ""),
@@ -783,6 +873,7 @@ async def analyze_area(area_request: dict):
                     ]
                 }
             }
+            print("Final Results:", final_results)  # Log the final results
             return final_results
             
         except Exception as e:
@@ -802,3 +893,5 @@ uvicorn main:app --reload
 npm start
 
 '''
+
+
