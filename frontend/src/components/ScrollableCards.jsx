@@ -53,6 +53,9 @@ const ScrollableCards = ({ analysis, city, area, handleNewAnalysis }) => {
 
   return (
     <div className={`scrollable-container ${darkMode ? 'dark-theme' : 'light-theme'}`} ref={scrollContainerRef}>
+      {/* Theme toggle button */}
+
+
       {/* Search overlay */}
       <div className="search-overlay">
         <button onClick={handleNewAnalysis} className="primary-button">
@@ -78,14 +81,6 @@ const ScrollableCards = ({ analysis, city, area, handleNewAnalysis }) => {
             location={analysis.air_quality.location || { city, area }}
           />
         )}
-        
-        {/* Theme toggle button moved below location */}
-        <div className="theme-toggle-wrapper">
-          <button onClick={toggleTheme} className="theme-toggle-button">
-            {darkMode ? <FaSun className="theme-icon" /> : <FaMoon className="theme-icon" />}
-            <span className="toggle-text">{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
-          </button>
-        </div>
       </div>
 
       {/* Visualization Card */}

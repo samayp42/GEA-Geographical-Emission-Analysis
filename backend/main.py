@@ -721,31 +721,19 @@ def generate_health_recommendations(location, air_quality, weather):
     Respond only with the JSON object, no additional text.
     """
 
-    try:
-        response = model.generate_content(llm_prompt)
-        raw_response = response.text.strip()
+    response = model.generate_content(llm_prompt)
+    raw_response = response.text.strip()
         
         # Find the JSON object in the response
-        json_start = raw_response.find('{')
-        json_end = raw_response.rfind('}') + 1
-        if json_start != -1 and json_end != -1:
-            json_str = raw_response[json_start:json_end]
-            health_recommendations = json.loads(json_str)
-        else:
-            raise ValueError("No valid JSON found in response")
+    json_start = raw_response.find('{')
+    json_end = raw_response.rfind('}') + 1
+    if json_start != -1 and json_end != -1:
+        json_str = raw_response[json_start:json_end]
+        health_recommendations = json.loads(json_str)
+    else:
+        raise ValueError("No valid JSON found in response")
 
-    except Exception as e:
-        print(f"Error in health recommendations: {str(e)}")
-        # Provide a default structure if the LLM fails
-        health_recommendations = {
-            "conditions": {
-                "General": {
-                    "risk_level": "Medium",
-                    "do": ["Stay hydrated", "Monitor air quality", "Limit outdoor activities if needed"],
-                    "dont": ["Avoid strenuous outdoor activities", "Don't ignore health symptoms"]
-                }
-            }
-        }
+    
 
     return {
         "location": location['display_name'],
