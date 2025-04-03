@@ -601,6 +601,7 @@ def get_air_quality(lat, lon):
         }
 
 # Modify the analyze_area function to include air quality data
+
 # Add this function after the get_air_quality function
 def get_weather_data(lat, lon):
     """Fetch current weather data from OpenWeather API"""
